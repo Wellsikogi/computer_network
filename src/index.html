@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="parent_wrapper">
+    <div class="user_wrapper">
+      <div></div>
+      <div class="my_name_container">
+        <label for="nickname">닉네임:</label>
+        <input type="text" id="nickname">
+        <button class="nickname_modify_button">변경</button>
+      </div>
+      <div class="userlist_container">
+        <ul class="user_list"></ul>
+      </div>
+      <button class="vote_button">투표</button>
+    </div>
+    <div class="chat_wrapper">
+      <div class="user_container"></div>
+      <div class="display_container">
+        <ul class="chatting_list">
+          <li class="received"></li>
+          <li class="sent"></li>
+        </ul>
+      </div>
+      <div class="input_container">
+        <span>
+          <input type="text" class="chatting_input">
+          <button class="send_button">전송</button>
+        </span>
+      </div>
+    </div>
+    <div class="role_wrapper">
+      <div class="role_container">
+        <span>당신은</span>
+        <span class="role">호스트</span>
+        <span>입니다</span>
+      </div>
+      <div class="topic_container">
+        <span class="topic">토픽 : 동물</span>
+        <span class="answer">정답 : 사자</span>
+      </div>
+      <div class = "host_container">
+        <button class="hostbutton">문제출제</button>
+      </div>
+      <div class="image_container">
+        <button class="popup_button">이미지 보기</button>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <input type="file" name="image" id="image_input" accept="image/*">
+          <button type="submit">이미지 보내기</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>
