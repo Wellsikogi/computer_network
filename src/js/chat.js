@@ -11,7 +11,6 @@ const displayContainer = document.querySelector(".display_container");
 const popupButton = document.querySelector(".popup_button");
 const roleText = document.querySelector(".role");
 const hostButton = document.querySelector(".hostbutton");
-
 var nickname = "hw1";
 var userid = socket.io.userid;
 
@@ -26,12 +25,19 @@ socket.on("connect", () => {
 });
 
 nickname_modify_button.addEventListener("click", () => {
-  roleText.textContent="범인"//텍스트 바꾸는거!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //roleText.textContent="범인"//텍스트 바꾸는거!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const newNickname = nicknameinput.value;
   if (newNickname !== "") {
-    nickname = newNickname;
+    nickname = newNickname;    
     // 서버에 닉네임 변경 요청 전달
     socket.emit("changeNickname", nickname);
+    
+  }
+});
+
+socket.on("nicknameChanged", ({ sessionId, nickname }) => {
+  if (sessionId === socket.id) {
+    nicknameText.textContent = nickname; // 변경된 닉네임을 해당 클라이언트에게만 설정
   }
 });
 
@@ -120,8 +126,14 @@ function updateUserList(userlist) {
   const userItems = document.querySelectorAll(".user_list .user");
   userItems.forEach((userItem) => {
     userItem.addEventListener("click", () => {
+      const previousSelectedUser = document.querySelector(".user_chosen");
+      if (previousSelectedUser) {
+        previousSelectedUser.classList.remove("user_chosen");
+      }
+    
+      userItem.classList.add("user_chosen");
       const selectedUsername = userItem.querySelector(".username").textContent;
-      // 선택한 사용자 처리 로직 작성
+      
       console.log(`Selected user: ${selectedUsername}`);
     });
   });
@@ -131,10 +143,14 @@ function addUser(username) {
   const userItem = document.createElement("li");
   userItem.classList.add("user");
   userItem.innerHTML = `
-    <span class="username">${username}</span>
+    <li class = "user">
+      <span class="username">${username}</span>
+    </li>
   `;
   user_list.appendChild(userItem);
 }
+
+
 
 function LiModel(name, msg, time, senderid) {
   this.name = name;

@@ -59,7 +59,15 @@ io.on("connection", (socket) => {
     // 모든 클라이언트에게 사용자 목록 전달
     io.emit("userList", userlist);
   });
-
+socket.on("changeNickname", (nickname) =>{
+  const index = userlist.indexOf(socket.username);
+    if (index !== -1) {
+      userlist[index] = nickname;
+      socket.username = nickname;
+    }
+    // 변경된 사용자 목록을 모든 클라이언트에게 전달
+    io.emit("userList", userlist);
+})
   // 사용자가 접속을 종료한 경우
   socket.on("disconnect", () => {
     const index = userlist.indexOf(socket.username);
@@ -84,4 +92,4 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => console.log(`server is running on ${PORT}`));
+server.listen(PORT, '0.0.0.0',() => console.log(`server is running on ${PORT}`));
