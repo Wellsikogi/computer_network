@@ -22,24 +22,39 @@ var storage = multer.diskStorage({
 
 var upload = multer({ storage: storage });
 
-app.post("/upload", upload.single("image"), function (req, res) {
-  res.send("파일 업로드 완료");
-});
+// app.post("/upload", upload.single("image"), function (req, res) {
+//   res.send("파일 업로드 완료");
+// });
 
+// app.post("/upload", upload.single("image"), function (req, res) {
+//   const imageUrl =
+//     req.protocol + "://" + req.hostname + "/uploaded-images/problem.jpg";
+//     app.post("/upload", upload.single("image"), function (req, res) {
+//       const imageUrl =
+//         req.protocol + "://" + req.hostname + "/uploaded-images/problem.jpg";
+//       res.send(
+//         '<html><body><h1>파일 업로드 완료</h1><img src="' +
+//           imageUrl +
+//           '" alt="Uploaded Image"></body></html>'
+//       );
+//     });
+// });
 app.post("/upload", upload.single("image"), function (req, res) {
-  const imageUrl =
-    req.protocol + "://" + req.hostname + "/uploaded-images/problem.jpg";
-    app.post("/upload", upload.single("image"), function (req, res) {
-      const imageUrl =
-        req.protocol + "://" + req.hostname + "/uploaded-images/problem.jpg";
-      res.send(
-        '<html><body><h1>파일 업로드 완료</h1><img src="' +
-          imageUrl +
-          '" alt="Uploaded Image"></body></html>'
-      );
-    });
+  const imageUrl = req.protocol + "://" + req.hostname+":5000/uploaded-images/problem.jpg";
+  console.log("image uploaded on" + imageUrl);
+  const topic = req.body.topicInput; 
+  const answer = req.body.answerInput;
+  console.log(topic);
+  console.log(answer);
+  res.send(
+    '<html><body><h1>파일 업로드 완료</h1></body></html>'
+  );
+  io.emit("imguploaded",{
+    imageUrl: imageUrl,
+    topic: topic,
+    answer: answer
+  });
 });
-
 app.use("/uploaded-images", express.static(path.join(__dirname, "public/images")));
 
 app.use(express.static(path.join(__dirname, "src")));
