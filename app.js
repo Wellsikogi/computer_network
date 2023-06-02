@@ -105,6 +105,31 @@ socket.on("changeNickname", (nickname) =>{
       `${name}(${senderid}): ${msg} ${moment(new Date()).format("h:mm A")}`
     );
   });
+  //게임 시작 메세지
+  if (io.sockets.sockets.size === 5) {  
+      
+    for (let i = 5; i >= 1; i--) {
+      setTimeout(() => {
+        io.emit("chatting", {
+          name: "시스템",
+          msg: i.toString(),
+          time: moment(new Date()).format("h:mm A"),
+          senderid: "system",
+        });
+        console.log(i);
+      }, 1000 * (5-i));
+    }
+    setTimeout(() => {
+      io.emit("chatting", {
+        name: "시스템",
+        msg: "게임을 시작합니다!",
+        time: moment(new Date()).format("h:mm A"),
+        senderid: "system",
+      });
+      console.log("게임을 시작합니다!");
+    }, 6000);
+
+  }
 });
 
 server.listen(PORT, '0.0.0.0',() => console.log(`server is running on ${PORT}`));
