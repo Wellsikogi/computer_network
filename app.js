@@ -105,9 +105,8 @@ socket.on("changeNickname", (nickname) =>{
       `${name}(${senderid}): ${msg} ${moment(new Date()).format("h:mm A")}`
     );
   });
-  //게임 시작 메세지
-  if (io.sockets.sockets.size === 5) {  
-      
+  // 게임 시작 메시지
+  if (io.sockets.sockets.size === 5) {
     for (let i = 5; i >= 1; i--) {
       setTimeout(() => {
         io.emit("chatting", {
@@ -117,7 +116,7 @@ socket.on("changeNickname", (nickname) =>{
           senderid: "system",
         });
         console.log(i);
-      }, 1000 * (5-i));
+      }, 1000 * (5 - i));
     }
     setTimeout(() => {
       io.emit("chatting", {
@@ -127,9 +126,60 @@ socket.on("changeNickname", (nickname) =>{
         senderid: "system",
       });
       console.log("게임을 시작합니다!");
-    }, 6000);
 
+      // 역할 배열
+      const roles = ["호스트", "라이어", "시민", "시민", "시민"];
+      // 역할 랜덤 할당
+      const shuffledRoles = shuffleArray(roles);
+      for (let i = 0; i < userlist.length; i++) {
+        const role = shuffledRoles[i];
+        const username = userlist[i];
+        const userSocket = getUserSocketByUsername(username);
+        if (userSocket) {
+          userSocket.role = role;
+          io.to(userSocket.id).emit("assignRole", role);
+
+          // 역할에 따른 안내 메시지 전송
+          if (role === "호스트") {
+            io.to(userSocket.id).emit("chatting", {
+              name: "시스템",
+              msg: "당신은 호스트입니다.",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          } else if (role === "라이어") {
+            io.to(userSocket.id).emit("chatting", {
+              name: "시스템",
+              msg: "당신은 라이어입니다.",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          } else if (role === "시민") {
+            io.to(userSocket.id).emit("chatting", {
+              name: "시스템",
+              msg: "당신은 시민입니다.",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          }
+        }
+      }
+    }, 6000);
   }
 });
-
+//사용자 이름으로 소켓을 찾는 함수
+function getUserSocketByUsername(username) {
+  return Array.from(io.sockets.sockets.values()).find(
+    (socket) => socket.username === username
+  );
+}
+// 배열을 랜덤하게 섞는 함수
+function shuffleArray(array) {
+  const shuffledArray = [...array];
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+  }
+  return shuffledArray;
+}
 server.listen(PORT, '0.0.0.0',() => console.log(`server is running on ${PORT}`));
