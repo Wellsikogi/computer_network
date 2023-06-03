@@ -191,7 +191,7 @@ socket.on("changeNickname", (nickname) =>{
           if (role === "호스트") {
             io.to(userSocket.id).emit("chatting", {
               name: "시스템",
-              msg: "당신은 호스트입니다.",
+              msg: "당신은 호스트입니다. 문제를 출제해주세요",
               time: moment(new Date()).format("h:mm A"),
               senderid: "system",
             });

@@ -12,9 +12,23 @@ const displayContainer = document.querySelector(".display_container");
 const roleText = document.querySelector(".role");
 const hostButton = document.querySelector(".hostbutton");
 const voteButton = document.querySelector(".vote_button");
+const hintImage = document.querySelector(".image");
+const topictext = document.querySelector(".topic");
+const answertext = document.querySelector(".answer");
 var nickname = "hw1";
 var userid = socket.io.userid;
 let selectedUsername = "";
+
+function reset(){
+  hostButton.style.display = "none";
+  nickname_modify_button.style.visibility = "visible";
+  voteButton.disabled = true;
+  roleText.textContent="??"
+  answertext.textContent = "";
+  topictext.textContent = "";
+  hintImage.src= "../img/noimg.png";
+}
+
 
 function sendchat() {
   if (chatInput.value !== "") {
@@ -90,21 +104,26 @@ socket.on("connect", () => {
   nicknameinput.value = nickname;
   // 서버에 접속한 사용자 정보 전달
   socket.emit("connectUser", nickname);
+  reset();
 });
 // 역할 번경 로그 띄우기
 socket.on("assignRole", (role) => {
+  voteButton.disabled = false;
+  nickname_modify_button.style.visibility = "hidden";
   console.log("Assigned role:", role);
   if(role === "호스트"){
     roleText.textContent="호스트"
     hostButton.style.display = "block";
-    
   }
   else if(role === "라이어"){
     roleText.textContent="라이어"
+    hostButton.style.display = "none";
   }
   else{
     roleText.textContent="시민"
+    hostButton.style.display = "none";
   }
+  
 })
 
 socket.on("nicknameChanged", ({ sessionId, nickname }) => {
@@ -128,9 +147,6 @@ socket.on("chatting", (data) => {
 
 
 socket.on("imguploaded", ({imageUrl, topic, answer}) => {
-  const hintImage = document.querySelector(".image");
-  const topictext = document.querySelector(".topic");
-  const answertext = document.querySelector(".answer");
   if(roleText.textContent !== "라이어"){
     hintImage.src= imageUrl;
     answertext.textContent = answer;
@@ -200,5 +216,9 @@ nickname_modify_button.addEventListener("click", () => {
 });
 
 voteButton.addEventListener("click", () => {
-  socket.emit("voteUser", selectedUsername);
+  if(selectedUsername != ""){
+    socket.emit("voteUser", selectedUsername);
+    voteButton.disabled = true;
+    reset();
+  }
 })
