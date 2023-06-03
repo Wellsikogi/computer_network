@@ -90,7 +90,19 @@ socket.on("connect", () => {
   // 서버에 접속한 사용자 정보 전달
   socket.emit("connectUser", nickname);
 });
-
+// 역할 번경 로그 띄우기
+socket.on("assignRole", (role) => {
+  console.log("Assigned role:", role);
+  if(role === "호스트"){
+    roleText.textContent="호스트"
+  }
+  else if(role === "라이어"){
+    roleText.textContent="라이어"
+  }
+  else{
+    roleText.textContent="시민"
+  }
+})
 
 socket.on("nicknameChanged", ({ sessionId, nickname }) => {
   if (sessionId === socket.id) {
@@ -116,10 +128,11 @@ socket.on("imguploaded", ({imageUrl, topic, answer}) => {
   const hintImage = document.querySelector(".image");
   const topictext = document.querySelector(".topic");
   const answertext = document.querySelector(".answer");
-  hintImage.src= imageUrl;
+  if(roleText.textContent !== "라이어"){
+    hintImage.src= imageUrl;
+    answertext.textContent = answer;
+  }
   topictext.textContent = topic;
-  answertext.textContent = answer;
-  
 });
 
 
@@ -133,6 +146,7 @@ chatInput.addEventListener("keypress", (event) => {
 sendButton.addEventListener("click", sendchat);
 
 hostButton.addEventListener("click", () => {
+  if(roleText.textContent === "호스트"){
   const popupWindow = window.open("", "_blank", "width=480,height=160");
 
   popupWindow.document.write(`
@@ -166,6 +180,7 @@ hostButton.addEventListener("click", () => {
         </body>
       </html>
     `);
+    }
   
 });
 
