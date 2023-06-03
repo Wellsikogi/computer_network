@@ -95,6 +95,8 @@ socket.on("assignRole", (role) => {
   console.log("Assigned role:", role);
   if(role === "호스트"){
     roleText.textContent="호스트"
+    hostButton.style.display = "block";
+    
   }
   else if(role === "라이어"){
     roleText.textContent="라이어"
@@ -131,6 +133,8 @@ socket.on("imguploaded", ({imageUrl, topic, answer}) => {
   if(roleText.textContent !== "라이어"){
     hintImage.src= imageUrl;
     answertext.textContent = answer;
+  }else{
+    answertext.textContent = "???";
   }
   topictext.textContent = topic;
 });
