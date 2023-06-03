@@ -104,7 +104,7 @@ socket.on("connect", () => {
   nicknameinput.value = nickname;
   // 서버에 접속한 사용자 정보 전달
   socket.emit("connectUser", nickname);
-  reset();
+  
 });
 // 역할 번경 로그 띄우기
 socket.on("assignRole", (role) => {
@@ -219,6 +219,5 @@ voteButton.addEventListener("click", () => {
   if(selectedUsername != ""){
     socket.emit("voteUser", selectedUsername);
     voteButton.disabled = true;
-    reset();
   }
 })
