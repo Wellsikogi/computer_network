@@ -11,9 +11,10 @@ const displayContainer = document.querySelector(".display_container");
 // const popupButton = document.querySelector(".popup_button");
 const roleText = document.querySelector(".role");
 const hostButton = document.querySelector(".hostbutton");
+const voteButton = document.querySelector(".vote_button");
 var nickname = "hw1";
 var userid = socket.io.userid;
-
+let selectedUsername = "";
 
 function sendchat() {
   if (chatInput.value !== "") {
@@ -47,7 +48,7 @@ function updateUserList(userlist) {
       }
     
       userItem.classList.add("user_chosen");
-      const selectedUsername = userItem.querySelector(".username").textContent;
+      selectedUsername = userItem.querySelector(".username").textContent;
       
       console.log(`Selected user: ${selectedUsername}`);
     });
@@ -189,7 +190,6 @@ hostButton.addEventListener("click", () => {
 });
 
 nickname_modify_button.addEventListener("click", () => {
-  //roleText.textContent="범인"//텍스트 바꾸는거!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const newNickname = nicknameinput.value;
   if (newNickname !== "") {
     nickname = newNickname;    
@@ -198,3 +198,7 @@ nickname_modify_button.addEventListener("click", () => {
     
   }
 });
+
+voteButton.addEventListener("click", () => {
+  socket.emit("voteUser", selectedUsername);
+})

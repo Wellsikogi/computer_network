@@ -63,6 +63,8 @@ const PORT = process.env.PORT || 5000;
 
 // 사용자 목록
 const userlist = [];
+const userRoles = {};
+let votelist = {};
 
 io.on("connection", (socket) => {
   // 사용자가 접속한 경우
@@ -91,6 +93,51 @@ socket.on("changeNickname", (nickname) =>{
     }
     // 모든 클라이언트에게 사용자 목록 전달
     io.emit("userList", userlist);
+  });
+  //투표 로직
+  socket.on("voteUser", (selectedUsername)=> {
+    const voterUsername = socket.username;
+    const Username = getUserSocketByUsername(selectedUsername);
+    if(Username) {
+      votelist[Username.id] = (votelist[Username.id] || 0) + 1;
+    }
+    console.log(`[${voterUsername}] voted for [${selectedUsername}]`);
+    console.log("Current vote counts:", votelist);
+    //투표 합 측정
+    const voteCounts = Object.values(votelist).reduce((total, count) => total + count, 0);
+    console.log("투표 합계:", voteCounts);
+    //투표 합이 5라면
+    if(voteCounts === 5){
+      const entries = Object.entries(votelist);
+      const maxIndex = entries.reduce((maxIdx, [key, value], idx) => {
+        if (value > entries[maxIdx][1]) {
+          return idx;
+        } else {
+          return maxIdx;
+        }}, 0);
+        const [maxKey, maxValue] = entries[maxIndex];
+        console.log("가장 큰 값의 키:", maxKey);
+        console.log("가장 큰 값:", maxValue);
+
+        if(userRoles[maxKey] === "라이어"){
+          io.emit("chatting", {
+            name: "시스템",
+            msg: "시민의 승리입니다.",
+            time: moment(new Date()).format("h:mm A"),
+            senderid: "system",
+          });
+          votelist = {};
+        }
+        else{
+          io.emit("chatting", {
+            name: "시스템",
+            msg: "라이어의 승리입니다.",
+            time: moment(new Date()).format("h:mm A"),
+            senderid: "system",
+          });
+          votelist = {};
+        }
+    }
   });
 
   socket.on("chatting", (data) => {
@@ -137,6 +184,7 @@ socket.on("changeNickname", (nickname) =>{
         const userSocket = getUserSocketByUsername(username);
         if (userSocket) {
           userSocket.role = role;
+          userRoles[username] = role;//전역 변수에 username과 역할 저장
           io.to(userSocket.id).emit("assignRole", role);
 
           // 역할에 따른 안내 메시지 전송
