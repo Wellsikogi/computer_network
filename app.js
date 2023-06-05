@@ -77,11 +77,14 @@ io.on("connection", (socket) => {
     io.emit("userList", userlist);
   });
 socket.on("changeNickname", (nickname) =>{
+  const isDuplicate = userlist.some((user) => user !== socket.username && user === nickname);
+  if(!isDuplicate){//바꾸는 닉네임이 중복이면 바뀌지 앟음
   const index = userlist.indexOf(socket.username);
     if (index !== -1) {
       userlist[index] = nickname;
       socket.username = nickname;
     }
+  }
     // 변경된 사용자 목록을 모든 클라이언트에게 전달
     io.emit("userList", userlist);
 })
@@ -216,11 +219,11 @@ socket.on("changeNickname", (nickname) =>{
   }
 });
 //사용자 이름으로 소켓을 찾는 함수
-function getUserSocketByUsername(username) {
-  return Array.from(io.sockets.sockets.values()).find(
-    (socket) => socket.username === username
-  );
-}
+  function getUserSocketByUsername(username) {
+    return Array.from(io.sockets.sockets.values()).find(
+      (socket) => socket.username === username
+    );
+  }
 // 배열을 랜덤하게 섞는 함수
 function shuffleArray(array) {
   const shuffledArray = [...array];
