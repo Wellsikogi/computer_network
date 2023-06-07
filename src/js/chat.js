@@ -172,7 +172,12 @@ socket.on("imguploaded", ({imageUrl, topic, answer}) => {
     hintImage.src= imageUrl;
     answertext.textContent = answer;
   }else{
-    answertext.textContent = "???";
+    let answerlen = answer.length;
+    let anstext =""
+    for (let i = 0; i < answerlen; i++) {
+      anstext += "?";
+    }
+    answertext.textContent = anstext;
   }
   topictext.textContent = topic;
 });

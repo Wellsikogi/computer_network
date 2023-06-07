@@ -78,6 +78,7 @@ io.on("connection", (socket) => {
     }
     // 모든 클라이언트에게 사용자 목록 전달
     io.emit("userList", userlist);
+    
   });
   socket.on("changeNickname", (nickname) =>{
     const isDuplicate = userlist.some((user) => user !== socket.username && user === nickname);
@@ -195,73 +196,7 @@ io.on("connection", (socket) => {
     setTimeout(gamefin, 3000);
     
   });
-  
-  // 게임 시작 메시지
-  if (io.sockets.sockets.size === 5) {
-    for (let i = 5; i >= 1; i--) {
-      setTimeout(() => {
-        io.emit("chatting", {
-          name: "시스템",
-          msg: i.toString(),
-          time: moment(new Date()).format("h:mm A"),
-          senderid: "system",
-        });
-        console.log(i);
-      }, 1000 * (5 - i));
-    }
-    setTimeout(() => {
-      io.emit("chatting", {
-        name: "시스템",
-        msg: "게임을 시작합니다!",
-        time: moment(new Date()).format("h:mm A"),
-        senderid: "system",
-      });
-      console.log("게임을 시작합니다!");
-      isPlaying = true;
-
-      // 역할 배열
-      const roles = ["호스트", "라이어", "시민", "시민", "시민"];
-      // 역할 랜덤 할당
-      const shuffledRoles = shuffleArray(roles);
-      for (let i = 0; i < userlist.length; i++) {
-        const role = shuffledRoles[i];
-        const username = userlist[i];
-        const userSocket = getUserSocketByUsername(username);
-        if (userSocket) {
-          userSocket.role = role;
-          userRoles[username] = role;//전역 변수에 username과 역할 저장
-          io.to(userSocket.id).emit("assignRole", role);
-
-          // 역할에 따른 안내 메시지 전송
-          if (role === "호스트") {
-            io.to(userSocket.id).emit("chatting", {
-              name: "시스템",
-              msg: "당신은 호스트입니다. 문제를 출제해주세요",
-              time: moment(new Date()).format("h:mm A"),
-              senderid: "system",
-            });
-          } else if (role === "라이어") {
-            liername = username;
-            io.to(userSocket.id).emit("chatting", {
-              name: "시스템",
-              msg: "당신은 라이어입니다.",
-              time: moment(new Date()).format("h:mm A"),
-              senderid: "system",
-            });
-          } else if (role === "시민") {
-            io.to(userSocket.id).emit("chatting", {
-              name: "시스템",
-              msg: "당신은 시민입니다.",
-              time: moment(new Date()).format("h:mm A"),
-              senderid: "system",
-            });
-          }
-        }
-      }
-    }, 6000);
-  }
-
-
+  gamestart();
 
 });
 //사용자 이름으로 소켓을 찾는 함수
@@ -291,6 +226,91 @@ function gamefin(){
   isPlaying = false;
   liername = "";
   votelist = {};
+  setTimeout(gamestart,10000);
 
+}
+
+function gamestart(){
+  let currentusercount = io.sockets.sockets.size;
+  if (currentusercount === 5) {
+    io.emit("chatting", {
+      name: "시스템",
+      msg: "잠시 후 게임을 시작합니다",
+      time: moment(new Date()).format("h:mm A"),
+      senderid: "system",
+    });
+    for (let i = 5; i >= 1; i--) {
+      setTimeout(() => {
+        io.emit("chatting", {
+          name: "시스템",
+          msg: i.toString(),
+          time: moment(new Date()).format("h:mm A"),
+          senderid: "system",
+        });
+        console.log(i);
+      }, 3000 + 1000 * (5 - i));
+    }
+    setTimeout(() => {
+      io.emit("chatting", {
+        name: "시스템",
+        msg: "게임을 시작합니다!",
+        time: moment(new Date()).format("h:mm A"),
+        senderid: "system",
+      });
+      console.log("게임을 시작합니다!");
+      isPlaying = true;
+  
+      // 역할 배열
+      const roles = ["호스트", "라이어", "시민", "시민", "시민"];
+      // 역할 랜덤 할당
+      const shuffledRoles = shuffleArray(roles);
+      for (let i = 0; i < userlist.length; i++) {
+        const role = shuffledRoles[i];
+        const username = userlist[i];
+        const userSocket = getUserSocketByUsername(username);
+        if (userSocket) {
+          userSocket.role = role;
+          userRoles[username] = role;//전역 변수에 username과 역할 저장
+          io.to(userSocket.id).emit("assignRole", role);
+  
+          // 역할에 따른 안내 메시지 전송
+          if (role === "호스트") {
+            io.to(userSocket.id).emit("chatting", {
+              name: "시스템",
+              msg: "당신은 호스트입니다. 문제를 출제해주세요",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          } else if (role === "라이어") {
+            liername = username;
+            io.to(userSocket.id).emit("chatting", {
+              name: "시스템",
+              msg: "당신은 라이어입니다.",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          } else if (role === "시민") {
+            io.to(userSocket.id).emit("chatting", {
+              name: "시스템",
+              msg: "당신은 시민입니다.",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          }
+        }
+      }
+    }, 9000);
+  }
+  else{
+    io.emit("chatting", {
+      name: "시스템",
+      msg: `현제 ${currentusercount}명입니다. 5명이 모이면 게임을 시작합니다.`,
+      time: moment(new Date()).format("h:mm A"),
+      senderid: "system",
+    });
+
+  }
+  
+  
 }
 server.listen(PORT, '0.0.0.0',() => console.log(`server is running on ${PORT}`));
