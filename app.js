@@ -56,6 +56,12 @@ app.post("/upload", upload.single("image"), function (req, res) {
     topic: topic,
     answer: answer
   });
+  io.emit("chatting", {
+    name: "시스템",
+    msg: "문제가 출제되었습니다. 자유롭게 토의하고 라이어를 찾으세요",
+    time: moment(new Date()).format("h:mm A"),
+    senderid: "system",
+  });
 });
 app.use("/uploaded-images", express.static(path.join(__dirname, "public/images")));
 
@@ -188,7 +194,7 @@ io.on("connection", (socket) => {
     }else{
       io.emit("chatting", {
         name: "시스템",
-        msg: `라이어가 틀렸습니다. 정답은${answer}였습니다!`,
+        msg: `라이어가 틀렸습니다. 정답은${answer}입니다!`,
         time: moment(new Date()).format("h:mm A"),
         senderid: "system",
       });
