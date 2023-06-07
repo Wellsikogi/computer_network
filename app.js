@@ -137,7 +137,7 @@ io.on("connection", (socket) => {
         if(userRoles[maxKey] === "라이어" && duplicateKeys.length <= 1){
           io.emit("chatting", {
             name: "시스템",
-            msg: "라이어를 맞췄습니다. 라이어는" + liername + "입니다.",
+            msg: "라이어를 맞췄습니다. 라이어는 " + liername + "입니다.",
             time: moment(new Date()).format("h:mm A"),
             senderid: "system",
           });
@@ -270,7 +270,7 @@ function gamestart(){
         const userSocket = getUserSocketByUsername(username);
         if (userSocket) {
           userSocket.role = role;
-          userRoles[username] = role;//전역 변수에 username과 역할 저장
+          userRoles[userSocket.id] = role;//전역 변수에 userSocekt.id과 역할 저장
           io.to(userSocket.id).emit("assignRole", role);
   
           // 역할에 따른 안내 메시지 전송
