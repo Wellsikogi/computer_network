@@ -145,6 +145,13 @@ socket.on("chatting", (data) => {
   displayContainer.scrollTo(0, displayContainer.scrollHeight);
 });
 
+socket.on("lierchatting", (data) => {
+  console.log(data);
+  const { name, msg, time, senderid } = data;
+  const chat = new LiModel(name, msg, time, senderid);
+  chat.addChat();
+  displayContainer.scrollTo(0, displayContainer.scrollHeight);
+});
 
 socket.on("imguploaded", ({imageUrl, topic, answer}) => {
   if(roleText.textContent !== "라이어"){

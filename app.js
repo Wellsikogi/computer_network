@@ -64,6 +64,7 @@ const PORT = process.env.PORT || 5000;
 // 사용자 목록
 const userlist = [];
 const userRoles = {};
+let liername = "" ;
 let votelist = {};
 
 io.on("connection", (socket) => {
@@ -112,33 +113,57 @@ socket.on("changeNickname", (nickname) =>{
     //투표 합이 5라면
     if(voteCounts === 5){
       const entries = Object.entries(votelist);
-      const maxIndex = entries.reduce((maxIdx, [key, value], idx) => {
-        if (value > entries[maxIdx][1]) {
-          return idx;
-        } else {
-          return maxIdx;
-        }}, 0);
-        const [maxKey, maxValue] = entries[maxIndex];
-        console.log("가장 큰 값의 키:", maxKey);
-        console.log("가장 큰 값:", maxValue);
+      let maxIndex = 0;
+      let maxValue = entries[maxIndex][1];
+      let duplicateKeys = [];
 
-        if(userRoles[maxKey] === "라이어"){
+      entries.forEach(([key, value], idx) => {
+        if (value > maxValue) {
+          maxIndex = idx;
+          maxValue = value;
+          duplicateKeys = []; // 새로운 최댓값을 발견했으므로 중복 키 배열 초기화
+        } else if (value === maxValue) {
+          duplicateKeys.push(key); // 최댓값과 동일한 값이면 중복 키 배열에 추가
+        }
+      });
+
+      const maxKey = entries[maxIndex][0];
+      console.log("가장 큰 값의 키:", maxKey);
+      console.log("가장 큰 값:", maxValue);
+      console.log("값의 중복 여부:", duplicateKeys.length > 1 ? "중복" : "단일");
+        if(userRoles[maxKey] === "라이어" && duplicateKeys.length <= 1){
           io.emit("chatting", {
             name: "시스템",
-            msg: "시민의 승리입니다.",
+            msg: "시민의 승리입니다. 라이어는" + liername + "입니다.",
             time: moment(new Date()).format("h:mm A"),
             senderid: "system",
           });
           votelist = {};
+          setTimeout(() => {
+            io.emit("lierchatting", {
+              name: "시스템",
+              msg: "라이어는 정답을 입력해주시길 바랍니다.",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          }, 1000);
         }
         else{
           io.emit("chatting", {
             name: "시스템",
-            msg: "라이어의 승리입니다.",
+            msg: "라이어의 승리입니다. 라이어는 " + liername + "입니다.",
             time: moment(new Date()).format("h:mm A"),
             senderid: "system",
           });
           votelist = {};
+          setTimeout(() => {
+            io.emit("lierchatting", {
+              name: "시스템",
+              msg: "라이어는 정답을 입력해주시길 바랍니다.",
+              time: moment(new Date()).format("h:mm A"),
+              senderid: "system",
+            });
+          }, 1000);
         }
     }
   });
@@ -189,6 +214,9 @@ socket.on("changeNickname", (nickname) =>{
           userSocket.role = role;
           userRoles[username] = role;//전역 변수에 username과 역할 저장
           io.to(userSocket.id).emit("assignRole", role);
+          if(role === "라이어"){
+            liername = username;
+          }
 
           // 역할에 따른 안내 메시지 전송
           if (role === "호스트") {
