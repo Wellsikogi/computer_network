@@ -6,8 +6,10 @@ const path = require("path");
 const server = http.createServer(app);
 const socketIO = require("socket.io");
 const moment = require("moment");
-
 const io = socketIO(server);
+
+var answer = "";
+var isPlaying = false;
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -43,7 +45,7 @@ app.post("/upload", upload.single("image"), function (req, res) {
   const imageUrl = req.protocol + "://" + req.hostname+":5000/uploaded-images/problem.jpg";
   console.log("image uploaded on" + imageUrl);
   const topic = req.body.topicInput; 
-  const answer = req.body.answerInput;
+  answer = req.body.answerInput;
   console.log(topic);
   console.log(answer);
   res.send(
@@ -77,18 +79,18 @@ io.on("connection", (socket) => {
     // 모든 클라이언트에게 사용자 목록 전달
     io.emit("userList", userlist);
   });
-socket.on("changeNickname", (nickname) =>{
-  const isDuplicate = userlist.some((user) => user !== socket.username && user === nickname);
-  if(!isDuplicate){//바꾸는 닉네임이 중복이면 바뀌지 앟음
-  const index = userlist.indexOf(socket.username);
-    if (index !== -1) {
-      userlist[index] = nickname;
-      socket.username = nickname;
+  socket.on("changeNickname", (nickname) =>{
+    const isDuplicate = userlist.some((user) => user !== socket.username && user === nickname);
+    if(!isDuplicate){//바꾸는 닉네임이 중복이면 바뀌지 앟음
+    const index = userlist.indexOf(socket.username);
+      if (index !== -1) {
+        userlist[index] = nickname;
+        socket.username = nickname;
+      }
     }
-  }
-    // 변경된 사용자 목록을 모든 클라이언트에게 전달
-    io.emit("userList", userlist);
-})
+      // 변경된 사용자 목록을 모든 클라이언트에게 전달
+      io.emit("userList", userlist);
+  })
   // 사용자가 접속을 종료한 경우
   socket.on("disconnect", () => {
     const index = userlist.indexOf(socket.username);
@@ -134,18 +136,18 @@ socket.on("changeNickname", (nickname) =>{
         if(userRoles[maxKey] === "라이어" && duplicateKeys.length <= 1){
           io.emit("chatting", {
             name: "시스템",
-            msg: "시민의 승리입니다. 라이어는" + liername + "입니다.",
+            msg: "라이어를 맞췄습니다. 라이어는" + liername + "입니다.",
             time: moment(new Date()).format("h:mm A"),
             senderid: "system",
           });
-          votelist = {};
           setTimeout(() => {
-            io.emit("lierchatting", {
+            io.emit("chatting", {
               name: "시스템",
-              msg: "라이어는 정답을 입력해주시길 바랍니다.",
+              msg: "라이어는 정답을 입력해주시길 바랍니다. 정답을 맞추면 라이어의 역전승입니다.",
               time: moment(new Date()).format("h:mm A"),
               senderid: "system",
             });
+            io.emit("lierphase") 
           }, 1000);
         }
         else{
@@ -155,15 +157,8 @@ socket.on("changeNickname", (nickname) =>{
             time: moment(new Date()).format("h:mm A"),
             senderid: "system",
           });
-          votelist = {};
-          setTimeout(() => {
-            io.emit("lierchatting", {
-              name: "시스템",
-              msg: "라이어는 정답을 입력해주시길 바랍니다.",
-              time: moment(new Date()).format("h:mm A"),
-              senderid: "system",
-            });
-          }, 1000);
+          setTimeout(gamefin, 3000);
+          
         }
     }
   });
@@ -180,6 +175,27 @@ socket.on("changeNickname", (nickname) =>{
       `${name}(${senderid}): ${msg} ${moment(new Date()).format("h:mm A")}`
     );
   });
+
+  socket.on("lieranswer", (lieranswer) => {
+    if(lieranswer ===answer) {
+      io.emit("chatting", {
+        name: "시스템",
+        msg: "라이어가 정답을 맞췄습니다. 라이어의 승리입니다!",
+        time: moment(new Date()).format("h:mm A"),
+        senderid: "system",
+      });
+    }else{
+      io.emit("chatting", {
+        name: "시스템",
+        msg: `라이어가 틀렸습니다. 정답은${answer}였습니다!`,
+        time: moment(new Date()).format("h:mm A"),
+        senderid: "system",
+      });
+    }
+    setTimeout(gamefin, 3000);
+    
+  });
+  
   // 게임 시작 메시지
   if (io.sockets.sockets.size === 5) {
     for (let i = 5; i >= 1; i--) {
@@ -201,6 +217,7 @@ socket.on("changeNickname", (nickname) =>{
         senderid: "system",
       });
       console.log("게임을 시작합니다!");
+      isPlaying = true;
 
       // 역할 배열
       const roles = ["호스트", "라이어", "시민", "시민", "시민"];
@@ -214,9 +231,6 @@ socket.on("changeNickname", (nickname) =>{
           userSocket.role = role;
           userRoles[username] = role;//전역 변수에 username과 역할 저장
           io.to(userSocket.id).emit("assignRole", role);
-          if(role === "라이어"){
-            liername = username;
-          }
 
           // 역할에 따른 안내 메시지 전송
           if (role === "호스트") {
@@ -227,6 +241,7 @@ socket.on("changeNickname", (nickname) =>{
               senderid: "system",
             });
           } else if (role === "라이어") {
+            liername = username;
             io.to(userSocket.id).emit("chatting", {
               name: "시스템",
               msg: "당신은 라이어입니다.",
@@ -245,13 +260,16 @@ socket.on("changeNickname", (nickname) =>{
       }
     }, 6000);
   }
+
+
+
 });
 //사용자 이름으로 소켓을 찾는 함수
-  function getUserSocketByUsername(username) {
-    return Array.from(io.sockets.sockets.values()).find(
-      (socket) => socket.username === username
-    );
-  }
+function getUserSocketByUsername(username) {
+  return Array.from(io.sockets.sockets.values()).find(
+    (socket) => socket.username === username
+  );
+}
 // 배열을 랜덤하게 섞는 함수
 function shuffleArray(array) {
   const shuffledArray = [...array];
@@ -260,5 +278,19 @@ function shuffleArray(array) {
     [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
   }
   return shuffledArray;
+}
+
+function gamefin(){
+  io.emit("chatting", {
+    name: "시스템",
+    msg: "게임이 종료되었습니다. 5명이 10초이상 유지될 경우 게임이 재시작됩니다.",
+    time: moment(new Date()).format("h:mm A"),
+    senderid: "system",
+  });
+  io.emit("gamefin");
+  isPlaying = false;
+  liername = "";
+  votelist = {};
+
 }
 server.listen(PORT, '0.0.0.0',() => console.log(`server is running on ${PORT}`));

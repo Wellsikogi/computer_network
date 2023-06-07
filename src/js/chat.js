@@ -18,7 +18,10 @@ const answertext = document.querySelector(".answer");
 var nickname = "hw1";
 var userid = socket.io.userid;
 let selectedUsername = "";
-
+var isplaying = false;
+var myrole = 0; //0은 게임시작전, 1은 호스트, 2는 라이어, 3은 시민
+var chatable = true;
+var lierphase = false; //
 function reset(){
   hostButton.style.display = "none";
   nickname_modify_button.style.visibility = "visible";
@@ -27,18 +30,26 @@ function reset(){
   answertext.textContent = "";
   topictext.textContent = "";
   hintImage.src= "../img/noimg.png";
+  isplaying = false;
+  myrole = 0;
+  chatable = true;
+  lierphase = false;
 }
 
 
 function sendchat() {
-  if (chatInput.value !== "") {
+  if (chatInput.value !== ""&& chatable) {
     const param = {
       name: nickname,
       msg: chatInput.value,
       senderid: userid,
     };
-    chatInput.value = "";
     socket.emit("chatting", param);
+    if(lierphase){
+      const lieranswer = chatInput.value;
+      socket.emit("lieranswer", lieranswer);
+    }
+    chatInput.value = "";
   }
   
 }
@@ -90,8 +101,8 @@ function LiModel(name, msg, time, senderid) {
   this.addChat = () => {
     const li = document.createElement("li");
     li.classList.add(this.senderid === userid ? "sent" : "received");
-    const dom = `<span class="user">${this.name}:</span>
-      <span class="message">${this.msg}</span>
+    const dom = `<span class="user">${this.name}</span>
+      <span class="message"> ${this.msg} </span>
       <span class="time">${this.time}</span>`;
     li.innerHTML = dom;
     chatList.appendChild(li);
@@ -111,16 +122,20 @@ socket.on("assignRole", (role) => {
   voteButton.disabled = false;
   nickname_modify_button.style.visibility = "hidden";
   console.log("Assigned role:", role);
+  isplaying = true;
   if(role === "호스트"){
-    roleText.textContent="호스트"
+    roleText.textContent=role;
+    myrole = 1;
     hostButton.style.display = "block";
   }
   else if(role === "라이어"){
-    roleText.textContent="라이어"
+    roleText.textContent=role;
+    myrole = 2;
     hostButton.style.display = "none";
   }
   else{
-    roleText.textContent="시민"
+    roleText.textContent="시민";
+    myrole = 3;
     hostButton.style.display = "none";
   }
   
@@ -145,12 +160,11 @@ socket.on("chatting", (data) => {
   displayContainer.scrollTo(0, displayContainer.scrollHeight);
 });
 
-socket.on("lierchatting", (data) => {
-  console.log(data);
-  const { name, msg, time, senderid } = data;
-  const chat = new LiModel(name, msg, time, senderid);
-  chat.addChat();
-  displayContainer.scrollTo(0, displayContainer.scrollHeight);
+socket.on("lierphase", () => {
+  if(myrole != 2){
+    chatable = false;
+  }
+  lierphase = true;
 });
 
 socket.on("imguploaded", ({imageUrl, topic, answer}) => {
@@ -161,6 +175,10 @@ socket.on("imguploaded", ({imageUrl, topic, answer}) => {
     answertext.textContent = "???";
   }
   topictext.textContent = topic;
+});
+
+socket.on("gamefin", () => {
+  reset();
 });
 
 
