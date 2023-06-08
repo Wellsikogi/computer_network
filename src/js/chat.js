@@ -168,8 +168,15 @@ socket.on("lierphase", () => {
 });
 
 socket.on("imguploaded", ({imageUrl, topic, answer}) => {
+  let imgUrl;
+  console.log(window.location.hostname)
+  if (window.location.hostname == "127.0.0.1"||window.location.hostname == "localhost") {
+    imgUrl = "http://localhost:5000/uploaded-images/problem.jpg";
+  } else {
+    imgUrl = imageUrl;
+  }
   if(roleText.textContent !== "라이어"){
-    hintImage.src= imageUrl;
+    hintImage.src= imgUrl;
     answertext.textContent = answer;
   }else{
     let answerlen = answer.length;

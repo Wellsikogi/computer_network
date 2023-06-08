@@ -7,7 +7,7 @@ const server = http.createServer(app);
 const socketIO = require("socket.io");
 const moment = require("moment");
 const io = socketIO(server);
-
+const ipAddress = "서버 외부 IP로 설정";
 var answer = "";
 var isPlaying = false;
 
@@ -24,25 +24,8 @@ var storage = multer.diskStorage({
 
 var upload = multer({ storage: storage });
 
-// app.post("/upload", upload.single("image"), function (req, res) {
-//   res.send("파일 업로드 완료");
-// });
-
-// app.post("/upload", upload.single("image"), function (req, res) {
-//   const imageUrl =
-//     req.protocol + "://" + req.hostname + "/uploaded-images/problem.jpg";
-//     app.post("/upload", upload.single("image"), function (req, res) {
-//       const imageUrl =
-//         req.protocol + "://" + req.hostname + "/uploaded-images/problem.jpg";
-//       res.send(
-//         '<html><body><h1>파일 업로드 완료</h1><img src="' +
-//           imageUrl +
-//           '" alt="Uploaded Image"></body></html>'
-//       );
-//     });
-// });
-app.post("/upload", upload.single("image"), function (req, res) {
-  const imageUrl = req.protocol + "://" + req.hostname+":5000/uploaded-images/problem.jpg";
+app.post("/upload", upload.single("image"), function (req, res, next) {
+  const imageUrl = req.protocol + "://" + ipAddress+":5000/uploaded-images/problem.jpg";
   console.log("image uploaded on" + imageUrl);
   const topic = req.body.topicInput; 
   answer = req.body.answerInput;
